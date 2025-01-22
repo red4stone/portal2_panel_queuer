@@ -3,6 +3,13 @@
 
 const PANEL_NAME = "peeker_panel";
 
+// Animations can be easily added here
+const animations = [
+    {filename: "peek", frames: 48},
+    {filename: "shake", frames: 48},
+    {filename: "drop", frames: 48}
+];
+
 function rem(node) {
     node.remove();
 }
@@ -11,7 +18,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function peek(x, y, speed = (Math.random() + 1) / 2 * 1.6) {
+async function peek(x, y, speed = (Math.random() + 1) / 2 * 1.6, anim = Math.floor(Math.random() * animations.length)) {
     if(document.getElementById(PANEL_NAME + "x" + x + "y" + y)) {
         return; // Don't overlap panels
     }
@@ -26,10 +33,18 @@ async function peek(x, y, speed = (Math.random() + 1) / 2 * 1.6) {
     panel.style.pointerEvents = "none";
     zIndex_0 = 999 - 49;
     panel = document.body.appendChild(panel);
+    panel.className += anim; // Used for the anim choice
 
     // Hijacking the zIndex attribute because this function getting called so much makes any 'i' index variables clash(?)
-    for(panel.zIndex = zIndex_0 + 1; panel.zIndex < 49 + zIndex_0; ++panel.zIndex) {
-        panel.innerHTML = "<img src=media/peek/peek" + ("000" + (Number(panel.zIndex) - zIndex_0)).slice(-4) + ".png>";
+    for(panel.zIndex = zIndex_0 + 1; panel.zIndex < animations[Number(panel.className)].frames + zIndex_0; ++panel.zIndex) {
+        // media/FILENAME/FILENAME0001.png thru FILENAMEFRAMES.png
+        panel.innerHTML = 
+            "<img src=media/" 
+            + animations[Number(panel.className)].filename 
+            + "/" 
+            + animations[Number(panel.className)].filename 
+            + ("000" + (Number(panel.zIndex) - zIndex_0)).slice(-4) 
+            + ".png>";
         await sleep(41.666666667 * speed);
     }
 
@@ -57,8 +72,11 @@ async function precache() {
 */
 
 window.onload = async function() {
-    await peek(window.screen.width+16, 0, 0.6) // Precachers
-    await peek(window.screen.width+16, 1, 0.6);
+    // Precache
+    for(i = 0; i < animations.length; ++i) {
+        await peek(window.screen.width+16, i*2, 0.6, i);
+        await peek(window.screen.width+16, i*2+1, 0.6, i);
+    }
     //await precache();
     //await precache();
     loop();
