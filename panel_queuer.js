@@ -7,7 +7,9 @@ const PANEL_NAME = "peeker_panel";
 const animations = [
     {filename: "peek", frames: 48},
     {filename: "shake", frames: 48},
-    {filename: "drop", frames: 48}
+    {filename: "drop", frames: 48},
+    {filename: "shy", frames: 30},
+    {filename: "slap", frames: 33}
 ];
 
 function rem(node) {
