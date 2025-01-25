@@ -20,7 +20,12 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function peek(x, y, speed = (Math.random() + 1) / 2 * 1.6, anim = Math.floor(Math.random() * animations.length)) {
+async function peek(
+    x = Math.floor(Math.random() * window.innerWidth / 64) * 64, 
+    y = Math.floor(Math.random() * window.innerHeight / 64) * 64, 
+    speed = (Math.random() - .5) * .3 + 1, 
+    anim = Math.floor(Math.random() * animations.length)
+) {
     if(document.getElementById(PANEL_NAME + "x" + x + "y" + y)) {
         return; // Don't overlap panels
     }
@@ -31,7 +36,7 @@ async function peek(x, y, speed = (Math.random() + 1) / 2 * 1.6, anim = Math.flo
     panel.style.top = y + 'px';
     panel.style.width = '128px';
     panel.style.height = '64px';
-    panel.style.overflow = "hidden";
+    //panel.style.overflow = "hidden"; Does nothing
     panel.style.pointerEvents = "none";
     zIndex_0 = 999 - 49;
     panel = document.body.appendChild(panel);
@@ -40,6 +45,18 @@ async function peek(x, y, speed = (Math.random() + 1) / 2 * 1.6, anim = Math.flo
     // Hijacking the zIndex attribute because this function getting called so much makes any 'i' index variables clash(?)
     for(panel.zIndex = zIndex_0 + 1; panel.zIndex < animations[Number(panel.className)].frames + zIndex_0; ++panel.zIndex) {
         // media/FILENAME/FILENAME0001.png thru FILENAMEFRAMES.png
+        /*
+        var innerImg = new Image();
+        innerImg.src = 
+        "media/" 
+        + animations[Number(panel.className)].filename 
+        + "/" 
+        + animations[Number(panel.className)].filename 
+        + ("000" + (Number(panel.zIndex) - zIndex_0)).slice(-4) 
+        + ".png";
+        panel.appendChild(innerImg);
+        */
+
         panel.innerHTML = 
             "<img src=media/" 
             + animations[Number(panel.className)].filename 
@@ -47,39 +64,53 @@ async function peek(x, y, speed = (Math.random() + 1) / 2 * 1.6, anim = Math.flo
             + animations[Number(panel.className)].filename 
             + ("000" + (Number(panel.zIndex) - zIndex_0)).slice(-4) 
             + ".png>";
-        await sleep(41.666666667 * speed);
+        
+        await sleep(41.666666667 / speed);
     }
 
     document.getElementById(panel.id).remove();
 }
 
 async function loop() {
-    peek(Math.floor(Math.random() * window.innerWidth / 64) * 64, Math.floor(Math.random() * window.innerHeight / 64) * 64);
+    peek();
     setTimeout(loop, Math.random() * 2000);
 }
 
 // Browser seems to forget all images here since they don't show?
 /*
-let cache = [];
+var cache = [];
 async function precache() {
-    for(i = 1; i < 49; ++i) {
-        img = new Image()
-        img.src = "media/peek/peek" +  ("000" + i).slice(-4) + ".png";
-        cache.push(img);
-        await sleep(50);
-        //console.log("cached:" + "media/peek/peek" +  ("000" + i).slice(-4) + ".png");
+    for(i = 0; i < animations.length; ++i) {
+        for(j = 1; j < animations[i].frames; ++j) {
+            img = new Image()
+            img.src = "media/" 
+            + animations[i].filename 
+            + "/" 
+            + animations[i].filename 
+            + ("000" + j).slice(-4) 
+            + ".png";
+            cache.push(img);
+        }
     }
-    console.log("Peek frames cached");
+    await sleep(5000);
+    console.log("Frames cached");
 }
 */
 
-window.onload = async function() {
-    // Precache
+// Takes too long, confuses people
+async function precache() {
+    var loadSpeed = 2;
     for(i = 0; i < animations.length; ++i) {
-        await peek(window.screen.width+16, i*2, 0.6, i);
-        await peek(window.screen.width+16, i*2+1, 0.6, i);
+        peek(window.innerWidth + 16, i * 2, loadSpeed, i);
+        await sleep(100);
+        peek(window.innerWidth + 16, i * 2 + 1, loadSpeed, i);
+        await sleep(100);
     }
-    //await precache();
-    //await precache();
+    await sleep(500);
+    console.log("Prepared panels");
+}
+
+window.onload = async function() {
+    await precache();
     loop();
 }
